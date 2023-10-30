@@ -1,4 +1,4 @@
-using MongoVSEventStore.DataAccess;
+using DatabaseComparison.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
 

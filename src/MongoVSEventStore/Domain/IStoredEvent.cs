@@ -1,4 +1,4 @@
-﻿namespace MongoVSEventStore.Domain
+﻿namespace DatabaseComparison.Domain
 {
     public interface IStoredEvent
     {

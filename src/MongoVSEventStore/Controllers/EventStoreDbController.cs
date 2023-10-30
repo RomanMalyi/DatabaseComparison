@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MongoVSEventStore.DataAccess;
-using MongoVSEventStore.Domain.Events;
-using MongoVSEventStore.Dto.Commands;
+﻿using DatabaseComparison.DataAccess;
+using DatabaseComparison.Domain.Events;
+using DatabaseComparison.Dto.Commands;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MongoVSEventStore.Controllers
+namespace DatabaseComparison.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -16,24 +16,18 @@ namespace MongoVSEventStore.Controllers
             this.userEventStore = userEventStore;
         }
 
-        [HttpPost("users")]
-        public async Task<IActionResult> Post(CreateUser command)
+        [HttpPost("currency")]
+        public async Task<IActionResult> AddStock([FromRoute] Guid userId, [FromBody] AddCurrencyInfoCommand command)
         {
-            var @event = new UserCreated() { Id = command.Id, CreatedAt = DateTimeOffset.Now, Name = command.Name};
-            await userEventStore.AppendToStream(@event, @event.Id.ToString());
-
-            return Ok();
-        }
-
-        [HttpPost("users/{userId}/stock")]
-        public async Task<IActionResult> AddStock([FromRoute] Guid userId, [FromBody] AddStockInfo command)
-        {
-            var @event = new StockInfoAdded
+            var @event = new CurrencyInfoAdded
             {
-                Symbol = command.Symbol,
-                Date = command.Date,
-                Position = command.Position,
-                Price = command.Price
+                Time = command.Time,
+                TickVolume = command.TickVolume,
+                RealVolume = command.RealVolume,
+                High = command.High,
+                Low = command.Low,
+                Open = command.Open,
+                Close = command.Close,
             };
             await userEventStore.AppendToStream(@event, userId.ToString());
 

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MongoVSEventStore", "MongoVSEventStore.csproj", "{528B1C64-E3C5-4106-97BC-425213AEC7AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseComparison", "DatabaseComparison.csproj", "{528B1C64-E3C5-4106-97BC-425213AEC7AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NBomberLoadSimulation", "..\NBomberLoadSimulation\NBomberLoadSimulation.csproj", "{C2104BB2-15B3-48CA-AB14-302007845B7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NBomberLoadSimulation", "..\NBomberLoadSimulation\NBomberLoadSimulation.csproj", "{C2104BB2-15B3-48CA-AB14-302007845B7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
+using DatabaseComparison.Domain;
+using DatabaseComparison.Domain.Events;
 using EventStore.Client;
-using MongoVSEventStore.Domain;
-using MongoVSEventStore.Domain.Events;
 
-namespace MongoVSEventStore.DataAccess
+namespace DatabaseComparison.DataAccess
 {
     public class UserEventStore
     {
@@ -37,7 +37,7 @@ namespace MongoVSEventStore.DataAccess
                 StreamPosition.Start);
             await foreach (var item in streamResult)
             {
-                var types = typeof(UserCreated).Assembly.GetTypes();
+                var types = typeof(CurrencyInfoAdded).Assembly.GetTypes();
                 Type existingType = types.FirstOrDefault(t => t.FullName.Equals(item.Event.EventType, StringComparison.OrdinalIgnoreCase));
                 result.Add(JsonSerializer.Deserialize(item.Event.Data.Span, existingType)
                     as IStoredEvent);
