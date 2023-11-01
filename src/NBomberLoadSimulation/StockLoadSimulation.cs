@@ -18,12 +18,12 @@ namespace NBomberLoadSimulation
         {
             CurrencyData = ReadFileCurrencyData();
             //this is for concurrent number of scenarios. Set numberOfScenarioInstances to 0 if you don't want it
-            var testDurationSeconds = 1;
-            var numberOfScenarioInstances = 0;
+            var testDurationSeconds = 60;
+            var numberOfScenarioInstances = 1;
 
             //set injectionDurationSeconds to 0 if you don't want it
-            var injectionDurationSeconds = 60;
-            var injectionRate = 5;
+            var injectionDurationSeconds = 120;
+            var injectionRate = 1;
             var injectionIntervalSeconds = 1;
 
 
@@ -35,9 +35,11 @@ namespace NBomberLoadSimulation
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
             ScenarioProps postgreSqlDbScenario = CreatePostgreSqlDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
+            ScenarioProps kafkaScenario = CreateKafkaScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+                injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
 
             NBomberRunner
-                .RegisterScenarios(mongoDbScenario, eventStoreDbScenario, postgreSqlDbScenario)
+                .RegisterScenarios(eventStoreDbScenario, mongoDbScenario, postgreSqlDbScenario, kafkaScenario)
                 .WithWorkerPlugins(new HttpMetricsPlugin(new[] { HttpVersion.Version1 }))
                 .Run();
         }
@@ -55,7 +57,7 @@ namespace NBomberLoadSimulation
 
                     return response;
                 })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(10)); })
+                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1)); })
                 .WithoutWarmUp()
                 .WithLoadSimulations(
                     Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
@@ -78,7 +80,7 @@ namespace NBomberLoadSimulation
 
                     return response;
                 })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(10));})
+                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1));})
                 .WithoutWarmUp()
                 .WithLoadSimulations(
                     Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
@@ -101,7 +103,30 @@ namespace NBomberLoadSimulation
 
                     return response;
                 })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(10)); })
+                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1)); })
+                .WithoutWarmUp()
+                .WithLoadSimulations(
+                    Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
+                    Simulation.Inject(injectionRate, TimeSpan.FromSeconds(injectionIntervalSeconds),
+                        TimeSpan.FromSeconds(injectionDurationSeconds)));
+
+            return scenario;
+        }
+
+        private static ScenarioProps CreateKafkaScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
+            int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
+        {
+            ScenarioProps scenario = Scenario.Create("KafkaScenario", async context =>
+                {
+                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/Kafka/currency")
+                        .WithHeader("Accept", "application/json")
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
+
+                    var response = await Http.Send(httpClient, request);
+
+                    return response;
+                })
+                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1)); })
                 .WithoutWarmUp()
                 .WithLoadSimulations(
                     Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
