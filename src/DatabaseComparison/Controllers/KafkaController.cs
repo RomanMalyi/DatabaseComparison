@@ -27,13 +27,11 @@ namespace DatabaseComparison.Controllers
             var config = KafkaProducerConfig.GetConfig();
 
             using var producer = new ProducerBuilder<Null, string>(config).Build();
-            string topic = "firstOne"; // Replace with your topic name
+            string topic = "firstOne";
             string message = Newtonsoft.Json.JsonConvert.SerializeObject(@event);
             var deliveryReport = await producer.ProduceAsync(topic, new Message<Null, string> { Value = message });
 
-            //await userEventStore.AppendToStream(@event, streamName);
-
-            return Ok();
+            return Ok(deliveryReport.Status);
         }
 
         public static class KafkaProducerConfig
@@ -42,7 +40,7 @@ namespace DatabaseComparison.Controllers
             {
                 return new ProducerConfig
                 {
-                    BootstrapServers = "localhost:29092", // Replace with your Kafka broker address
+                    BootstrapServers = "localhost:29092",
                     ClientId = "KafkaExampleProducer",
                 };
             }
