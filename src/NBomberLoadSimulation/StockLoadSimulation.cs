@@ -11,31 +11,31 @@ namespace NBomberLoadSimulation
 {
     public static class StockLoadSimulation
     {
-        private static List<AddCurrencyInfoCommand> CurrencyData;
-        private static int counter = 0;
+        private static List<AddCurrencyInfoCommand> _currencyData;
+        private static int _counter = 0;
 
         public static void RunTest()
         {
-            CurrencyData = ReadFileCurrencyData();
+            _currencyData = ReadFileCurrencyData();
             //this is for concurrent number of scenarios. Set numberOfScenarioInstances to 0 if you don't want it
-            var testDurationSeconds = 60;
+            var testDurationSeconds = 10;
             var numberOfScenarioInstances = 1;
 
             //set injectionDurationSeconds to 0 if you don't want it
-            var injectionDurationSeconds = 120;
+            var injectionDurationSeconds = 1;
             var injectionRate = 1;
             var injectionIntervalSeconds = 1;
 
 
 
             using var httpClient = new HttpClient();
-            ScenarioProps mongoDbScenario = CreateMongoDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+            ScenarioProps mongoDbScenario = CreateScenario("MongoDb", httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
-            ScenarioProps eventStoreDbScenario = CreateEventStoreDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+            ScenarioProps eventStoreDbScenario = CreateScenario("EventStoreDb", httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
-            ScenarioProps postgreSqlDbScenario = CreatePostgreSqlDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+            ScenarioProps postgreSqlDbScenario = CreateScenario("PostgreSqlDb", httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
-            ScenarioProps kafkaScenario = CreateKafkaScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+            ScenarioProps kafkaScenario = CreateScenario("Kafka", httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
 
             NBomberRunner
@@ -44,81 +44,12 @@ namespace NBomberLoadSimulation
                 .Run();
         }
 
-        private static ScenarioProps CreateMongoDbScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
+        private static ScenarioProps CreateScenario(string name, HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
             int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
         {
-            ScenarioProps scenario = Scenario.Create("MongoDbScenario", async context =>
+            ScenarioProps scenario = Scenario.Create($"{name}Scenario", async context =>
                 {
-                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/MongoDb/currency")
-                        .WithHeader("Accept", "application/json")
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
-
-                    var response = await Http.Send(httpClient, request);
-
-                    return response;
-                })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1)); })
-                .WithoutWarmUp()
-                .WithLoadSimulations(
-                    Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
-                    Simulation.Inject(injectionRate, TimeSpan.FromSeconds(injectionIntervalSeconds),
-                        TimeSpan.FromSeconds(injectionDurationSeconds)));
-
-            return scenario;
-        }
-
-        private static ScenarioProps CreateEventStoreDbScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
-            int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
-        {
-            ScenarioProps scenario = Scenario.Create("EventStoreDbScenario", async context =>
-                {
-                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/EventStoreDb/currency")
-                        .WithHeader("Accept", "application/json")
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
-
-                    var response = await Http.Send(httpClient, request);
-
-                    return response;
-                })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1));})
-                .WithoutWarmUp()
-                .WithLoadSimulations(
-                    Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
-                    Simulation.Inject(injectionRate, TimeSpan.FromSeconds(injectionIntervalSeconds),
-                        TimeSpan.FromSeconds(injectionDurationSeconds)));
-
-            return scenario;
-        }
-
-        private static ScenarioProps CreatePostgreSqlDbScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
-            int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
-        {
-            ScenarioProps scenario = Scenario.Create("PostgreSqlDbScenario", async context =>
-                {
-                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/PostgreSqlDb/currency")
-                        .WithHeader("Accept", "application/json")
-                        .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
-
-                    var response = await Http.Send(httpClient, request);
-
-                    return response;
-                })
-                .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(1)); })
-                .WithoutWarmUp()
-                .WithLoadSimulations(
-                    Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
-                    Simulation.Inject(injectionRate, TimeSpan.FromSeconds(injectionIntervalSeconds),
-                        TimeSpan.FromSeconds(injectionDurationSeconds)));
-
-            return scenario;
-        }
-
-        private static ScenarioProps CreateKafkaScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
-            int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
-        {
-            ScenarioProps scenario = Scenario.Create("KafkaScenario", async context =>
-                {
-                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/Kafka/currency")
+                    var request = Http.CreateRequest("POST", $"https://localhost:7091/api/{name}/currency")
                         .WithHeader("Accept", "application/json")
                         .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
 
@@ -138,14 +69,14 @@ namespace NBomberLoadSimulation
 
         private static AddCurrencyInfoCommand CreateCommand()
         {
-            counter++;
+            _counter++;
 
-            if (counter < CurrencyData.Count - 1)
+            if (_counter < _currencyData.Count - 1)
             {
-                return CurrencyData[counter - 1];
+                return _currencyData[_counter - 1];
             }
-            counter = 0;
-            return CurrencyData[counter];
+            _counter = 0;
+            return _currencyData[_counter];
         }
 
         private static List<AddCurrencyInfoCommand> ReadFileCurrencyData()
