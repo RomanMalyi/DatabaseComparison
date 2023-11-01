@@ -1,6 +1,7 @@
-﻿using DatabaseComparison.Dto.Commands;
+﻿using DatabaseComparison.Domain.Events;
+using DatabaseComparison.Dto.Commands;
+using Marten;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 
 namespace DatabaseComparison.Controllers
 {
@@ -8,30 +9,34 @@ namespace DatabaseComparison.Controllers
     [ApiController]
     public class PostgreSqlDbController : ControllerBase
     {
-        //pgAdmin ->PGADMIN_DEFAULT_EMAIL=myemail@example.com + PGADMIN_DEFAULT_PASSWORD=SuperSecret
-        /*
-                     var cs = "Host=localhost;Username=testuser;Password=testpass;Database=testdb";
-            await using var con = new NpgsqlConnection(cs);
-            con.Open();
+        private readonly Guid streamId = new Guid("21633f3c-ef78-48e3-969b-3c5c7295b12a");//Instead of "USD/EUR"
+        private readonly IDocumentSession session;
 
-            await InsertUser(con, command);
-         */
-        [HttpPost("currency")]
-        public async Task<IActionResult> AddStock([FromRoute] Guid userId, [FromBody] AddCurrencyInfoCommand command)
+        public PostgreSqlDbController(IDocumentSession session)
         {
-            return Ok();
+            this.session = session;
         }
 
-        private async Task InsertUser(NpgsqlConnection con)
-        {
-            await using var cmd = new NpgsqlCommand();
-            cmd.Connection = con;
+        //pgAdmin ->PGADMIN_DEFAULT_EMAIL=myemail@example.com + PGADMIN_DEFAULT_PASSWORD=SuperSecret
 
-            cmd.CommandText = "INSERT INTO users (UserId, CreatedDate) VALUES (@userId, @createdDate)";
-            //cmd.Parameters.AddWithValue("userId", command.Id);
-            //TODO: add name
-            cmd.Parameters.AddWithValue("createdDate", DateTime.UtcNow);
-            cmd.ExecuteNonQuery();
+        [HttpPost("currency")]
+        public async Task<IActionResult> AddStock([FromBody] AddCurrencyInfoCommand command)
+        {
+            var @event = new CurrencyInfoAdded
+            {
+                Time = command.Time,
+                TickVolume = command.TickVolume,
+                RealVolume = command.RealVolume,
+                High = command.High,
+                Low = command.Low,
+                Open = command.Open,
+                Close = command.Close,
+            };
+
+            await session.Events.AppendExclusive(streamId, @event);//first time use StartStream
+            await session.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

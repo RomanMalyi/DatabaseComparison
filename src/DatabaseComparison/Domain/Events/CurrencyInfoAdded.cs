@@ -1,7 +1,4 @@
-﻿using NEventStore;
-using NEventStore.Serialization;
-
-namespace DatabaseComparison.Domain.Events
+﻿namespace DatabaseComparison.Domain.Events
 {
     [Serializable]
     public class CurrencyInfoAdded : IStoredEvent

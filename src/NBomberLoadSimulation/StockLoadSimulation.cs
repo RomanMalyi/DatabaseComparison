@@ -33,11 +33,11 @@ namespace NBomberLoadSimulation
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
             ScenarioProps eventStoreDbScenario = CreateEventStoreDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
-            //ScenarioProps postgreSqlDbScenario = CreatePostgreSqlDbScenario(httpClient);
+            ScenarioProps postgreSqlDbScenario = CreatePostgreSqlDbScenario(httpClient, testDurationSeconds, numberOfScenarioInstances,
+                injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
 
             NBomberRunner
-                //.RegisterScenarios(mongoDbScenario, eventStoreDbScenario, postgreSqlDbScenario)
-                .RegisterScenarios(mongoDbScenario, eventStoreDbScenario)
+                .RegisterScenarios(mongoDbScenario, eventStoreDbScenario, postgreSqlDbScenario)
                 .WithWorkerPlugins(new HttpMetricsPlugin(new[] { HttpVersion.Version1 }))
                 .Run();
         }
@@ -88,12 +88,14 @@ namespace NBomberLoadSimulation
             return scenario;
         }
 
-        private static ScenarioProps CreatePostgreSqlDbScenario(HttpClient httpClient)
+        private static ScenarioProps CreatePostgreSqlDbScenario(HttpClient httpClient, int testDurationSeconds, int numberOfScenarioInstances,
+            int injectionRate, int injectionIntervalSeconds, int injectionDurationSeconds)
         {
             ScenarioProps scenario = Scenario.Create("PostgreSqlDbScenario", async context =>
                 {
-                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/PostgreSqlDb/stream")
-                        .WithHeader("Accept", "application/json");
+                    var request = Http.CreateRequest("POST", "https://localhost:7091/api/PostgreSqlDb/currency")
+                        .WithHeader("Accept", "application/json")
+                        .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
 
                     var response = await Http.Send(httpClient, request);
 
@@ -102,7 +104,9 @@ namespace NBomberLoadSimulation
                 .WithInit(async context => { await Task.Delay(TimeSpan.FromSeconds(10)); })
                 .WithoutWarmUp()
                 .WithLoadSimulations(
-                    Simulation.RampingInject(5, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(100)));
+                    Simulation.KeepConstant(numberOfScenarioInstances, TimeSpan.FromSeconds(testDurationSeconds)),
+                    Simulation.Inject(injectionRate, TimeSpan.FromSeconds(injectionIntervalSeconds),
+                        TimeSpan.FromSeconds(injectionDurationSeconds)));
 
             return scenario;
         }
