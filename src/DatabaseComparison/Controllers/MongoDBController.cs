@@ -1,8 +1,9 @@
-using DatabaseComparison.Domain;
+using Amazon.Runtime.EventStreams.Internal;
 using DatabaseComparison.Domain.Events;
 using DatabaseComparison.Dto.Commands;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+using NEventStore;
+using NEventStore.Serialization;
 
 namespace DatabaseComparison.Controllers
 {
@@ -10,13 +11,16 @@ namespace DatabaseComparison.Controllers
     [Route("api/[controller]")]
     public class MongoDbController : ControllerBase
     {
-        [HttpPost("currency")]
-        public async Task<IActionResult> AddStock([FromRoute] Guid userId, [FromBody]AddCurrencyInfoCommand command)
+        private readonly MongoStreamWrapper wrapper;
+
+        public MongoDbController(MongoStreamWrapper wrapper)
         {
-            var client = new MongoClient("mongodb://localhost:27017");
-            var database = client.GetDatabase("testDatabase");
-            var collection = database.GetCollection<IStoredEvent>("events");
-            //TODO: separate stream for each user
+            this.wrapper = wrapper;
+        }
+
+        [HttpPost("currency")]
+        public async Task<IActionResult> AddStock([FromBody] AddCurrencyInfoCommand command)
+        {
             var @event = new CurrencyInfoAdded
             {
                 Time = command.Time,
@@ -28,9 +32,33 @@ namespace DatabaseComparison.Controllers
                 Close = command.Close,
             };
 
-            await collection.InsertOneAsync(@event);
+            wrapper.AddEvent(@event);
 
             return Ok();
+        }
+    }
+
+    public class MongoStreamWrapper 
+    {
+        private readonly object executionLock = new object();
+
+        public void AddEvent(CurrencyInfoAdded @event)
+        {
+            lock (executionLock)
+            {
+                var store = Wireup.Init()
+                    .UsingMongoPersistence("mongodb://localhost:27017/testDatabase", new DocumentObjectSerializer())
+                    .InitializeStorageEngine()
+                    .Build();
+                using (store)
+                {
+                    using (var stream = store.OpenStream("USD/EUR"))//TODO: first time you need to use CREATESTREAM
+                    {
+                        stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
+                        stream.CommitChanges(Guid.NewGuid());
+                    }
+                }
+            }
         }
     }
 }

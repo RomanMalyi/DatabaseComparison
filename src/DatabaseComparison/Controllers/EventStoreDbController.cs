@@ -17,8 +17,9 @@ namespace DatabaseComparison.Controllers
         }
 
         [HttpPost("currency")]
-        public async Task<IActionResult> AddStock([FromRoute] Guid userId, [FromBody] AddCurrencyInfoCommand command)
+        public async Task<IActionResult> AddStock([FromBody] AddCurrencyInfoCommand command)
         {
+            var streamName = "USD/EUR";
             var @event = new CurrencyInfoAdded
             {
                 Time = command.Time,
@@ -29,7 +30,7 @@ namespace DatabaseComparison.Controllers
                 Open = command.Open,
                 Close = command.Close,
             };
-            await userEventStore.AppendToStream(@event, userId.ToString());
+            await userEventStore.AppendToStream(@event, streamName);
 
             return Ok();
         }

@@ -10,6 +10,11 @@
   <ItemGroup>
     <PackageReference Include="NBomber" Version="5.1.2" />
     <PackageReference Include="NBomber.Http" Version="5.0.0" />
+    <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DatabaseComparison\DatabaseComparison.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using DatabaseComparison.Controllers;
 using DatabaseComparison.DataAccess;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddEventStoreClient(builder.Configuration
     .GetSection("EventStore")
     .Get<string>());
 builder.Services.AddScoped<UserEventStore>();
+builder.Services.AddSingleton<MongoStreamWrapper>();
 
 var app = builder.Build();
 
