@@ -117,16 +117,6 @@ namespace NBomberLoadSimulation
             }
             counter = 0;
             return CurrencyData[counter];
-            /*return new AddCurrencyInfoCommand()
-            {
-                Time = DateTime.Now,
-                TickVolume = 2,
-                RealVolume = 0,
-                High = (decimal)1.058,
-                Low = (decimal)1.058,
-                Open = (decimal)1.058,
-                Close = (decimal)1.058,
-            };*/
         }
 
         private static List<AddCurrencyInfoCommand> ReadFileCurrencyData()

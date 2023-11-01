@@ -14,26 +14,4 @@ namespace DatabaseComparison.Domain.Events
         public decimal Open { get; set; }
         public decimal Close { get; set; }
     }
-
-    public class CurrencyInfoAddedDocumentSerializer : IDocumentSerializer
-    {
-        public object Serialize<T>(T graph)
-        {
-            T a;
-            //return Newtonsoft.Json.JsonConvert.SerializeObject(graph);
-            return new EventMessage() { Body = Newtonsoft.Json.JsonConvert.SerializeObject(graph) };
-        }
-
-        public T Deserialize<T>(object document)
-        {
-            T a;
-            if (document is string json)
-            {
-                // Use a JSON serializer to deserialize the JSON string back to the generic object.
-                return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
-            }
-
-            return default;
-        }
-    }
 }
