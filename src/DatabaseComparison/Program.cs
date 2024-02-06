@@ -20,7 +20,7 @@ builder.Services.AddEventStoreClient(builder.Configuration
 builder.Services.AddScoped<UserEventStore>();
 builder.Services.AddSingleton<MongoStreamWrapper>();
 builder.Services.AddSingleton(Wireup.Init()
-    .UsingMongoPersistence("mongodb://localhost:27017/testDatabase", new DocumentObjectSerializer())
+    .UsingMongoPersistence("mongodb://localhost:27017/currency", new DocumentObjectSerializer())
     .InitializeStorageEngine()
     .Build());
 
@@ -46,7 +46,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

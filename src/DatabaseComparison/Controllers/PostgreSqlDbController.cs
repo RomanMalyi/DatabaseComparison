@@ -33,8 +33,16 @@ namespace DatabaseComparison.Controllers
                 Close = command.Close,
             };
 
-            await session.Events.AppendExclusive(streamId, @event);//first time use StartStream
-            await session.SaveChangesAsync();
+            try
+            {
+                await session.Events.AppendExclusive(streamId, @event);//first time use StartStream
+                await session.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                session.Events.StartStream(streamId, @event);
+                await session.SaveChangesAsync();
+            }
 
             return Ok();
         }

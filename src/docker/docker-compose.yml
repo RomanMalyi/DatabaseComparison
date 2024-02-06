@@ -33,8 +33,5 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongoDB
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
     ports:
       - 27017:27017

@@ -13,20 +13,17 @@ namespace DatabaseComparison.DataAccess
 
         public void AddEvent(CurrencyInfoAdded @event)
         {
-            using (storeEvents)
+            try
             {
-                try
-                {
-                    using var stream = storeEvents.OpenStream("USD/EUR");
-                    stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
-                    stream.CommitChanges(Guid.NewGuid());
-                }
-                catch (Exception e)
-                {
-                    using var stream = storeEvents.CreateStream("USD/EUR");
-                    stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
-                    stream.CommitChanges(Guid.NewGuid());
-                }
+                using var stream = storeEvents.OpenStream("USD/EUR");
+                stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
+                stream.CommitChanges(Guid.NewGuid());
+            }
+            catch (Exception e)
+            {
+                using var stream = storeEvents.CreateStream("USD/EUR");
+                stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
+                stream.CommitChanges(Guid.NewGuid());
             }
         }
     }

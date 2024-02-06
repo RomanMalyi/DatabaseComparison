@@ -18,7 +18,7 @@ namespace NBomberLoadSimulation
         {
             _currencyData = ReadFileCurrencyData();
             //this is for concurrent number of scenarios. Set numberOfScenarioInstances to 0 if you don't want it
-            var testDurationSeconds = 10;
+            var testDurationSeconds = 30;
             var numberOfScenarioInstances = 1;
 
             //set injectionDurationSeconds to 0 if you don't want it
@@ -37,7 +37,7 @@ namespace NBomberLoadSimulation
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
 
             NBomberRunner
-                .RegisterScenarios(eventStoreDbScenario, mongoDbScenario, postgreSqlDbScenario)
+                .RegisterScenarios(mongoDbScenario, eventStoreDbScenario, postgreSqlDbScenario)
                 .WithWorkerPlugins(new HttpMetricsPlugin(new[] { HttpVersion.Version1 }))
                 .Run();
         }
@@ -47,7 +47,7 @@ namespace NBomberLoadSimulation
         {
             ScenarioProps scenario = Scenario.Create($"{name}Scenario", async context =>
                 {
-                    var request = Http.CreateRequest("POST", $"https://localhost:7091/api/{name}/currency")
+                    var request = Http.CreateRequest("POST", $"http://localhost:5093/api/{name}/currency")
                         .WithHeader("Accept", "application/json")
                         .WithBody(new StringContent(JsonConvert.SerializeObject(CreateCommand()), Encoding.UTF8, "application/json"));
 
@@ -82,7 +82,7 @@ namespace NBomberLoadSimulation
             List<AddCurrencyInfoCommand> currencyData = new List<AddCurrencyInfoCommand>();
 
             // Read the lines from the text file
-            string[] lines = File.ReadAllLines("C:\\Personal\\PhD\\MACD.csv");
+            string[] lines = File.ReadAllLines("/Users/romanmalyi/Documents/Repositories/DatabaseComparison/src/MACD.csv");
 
             // Skip the header line (assumed to be the first line)
             for (int i = 1; i < lines.Length; i++)
