@@ -1,28 +1,31 @@
 ﻿using DatabaseComparison.Domain.Events;
-using NEventStore.Serialization;
 using NEventStore;
 
 namespace DatabaseComparison.DataAccess
 {
     public class MongoStreamWrapper
     {
-        private readonly object executionLock = new object();
+        private readonly IStoreEvents storeEvents;
+        public MongoStreamWrapper(IStoreEvents storeEvents)
+        {
+            this.storeEvents = storeEvents;
+        }
 
         public void AddEvent(CurrencyInfoAdded @event)
         {
-            lock (executionLock)
+            using (storeEvents)
             {
-                var store = Wireup.Init()
-                    .UsingMongoPersistence("mongodb://localhost:27017/testDatabase", new DocumentObjectSerializer())
-                    .InitializeStorageEngine()
-                    .Build();
-                using (store)
+                try
                 {
-                    using (var stream = store.OpenStream("USD/EUR"))//TODO: first time you need to use CREATESTREAM
-                    {
-                        stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
-                        stream.CommitChanges(Guid.NewGuid());
-                    }
+                    using var stream = storeEvents.OpenStream("USD/EUR");
+                    stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
+                    stream.CommitChanges(Guid.NewGuid());
+                }
+                catch (Exception e)
+                {
+                    using var stream = storeEvents.CreateStream("USD/EUR");
+                    stream.Add(new EventMessage { Body = Newtonsoft.Json.JsonConvert.SerializeObject(@event) });
+                    stream.CommitChanges(Guid.NewGuid());
                 }
             }
         }

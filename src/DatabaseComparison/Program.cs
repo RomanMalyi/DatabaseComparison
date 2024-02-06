@@ -1,6 +1,8 @@
 using DatabaseComparison.Controllers;
 using DatabaseComparison.DataAccess;
 using Marten;
+using NEventStore;
+using NEventStore.Serialization;
 using Weasel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,9 +16,13 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddEventStoreClient(builder.Configuration
     .GetSection("EventStore")
-    .Get<string>());
+    .Get<string>() ?? string.Empty);
 builder.Services.AddScoped<UserEventStore>();
 builder.Services.AddSingleton<MongoStreamWrapper>();
+builder.Services.AddSingleton(Wireup.Init()
+    .UsingMongoPersistence("mongodb://localhost:27017/testDatabase", new DocumentObjectSerializer())
+    .InitializeStorageEngine()
+    .Build());
 
 builder.Services.AddMarten(options =>
 {
