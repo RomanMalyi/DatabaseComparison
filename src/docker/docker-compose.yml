@@ -1,23 +1,40 @@
-version: '2'
+version: '3.9'
+
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
+  postgres:
+    image: postgres:14-alpine
     ports:
-      - 22181:2181
+      - 5432:5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=testpass
+      - POSTGRES_USER=testuser
+      - POSTGRES_DB=testdb
   
-  kafka:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+  adminer:
+    image: adminer
+    restart: always
     ports:
-      - 29092:29092
+      - 8080:8080
+        
+  eventstoredb:
+    platform: linux/amd64
+    image: eventstore/eventstore:latest
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - EVENTSTORE_INSECURE=true # let eventstore run without ceritficate
+      - EVENTSTORE_EXT_TCP_PORT=1113 # set internal tcp port
+      - EVENTSTORE_HTTP_PORT=2113 # set internal admin ui port
+      - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
+    ports:
+      - "1113:1113" # map internal tcp port
+      - "2113:2113" # map internal admin ui port
+  
+  mongodb:
+    image: mongo:latest
+    container_name: mongoDB
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=rootpassword
+    ports:
+      - 27017:27017

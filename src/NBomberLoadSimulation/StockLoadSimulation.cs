@@ -35,11 +35,9 @@ namespace NBomberLoadSimulation
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
             ScenarioProps postgreSqlDbScenario = CreateScenario("PostgreSqlDb", httpClient, testDurationSeconds, numberOfScenarioInstances,
                 injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
-            ScenarioProps kafkaScenario = CreateScenario("Kafka", httpClient, testDurationSeconds, numberOfScenarioInstances,
-                injectionRate, injectionIntervalSeconds, injectionDurationSeconds);
 
             NBomberRunner
-                .RegisterScenarios(eventStoreDbScenario, mongoDbScenario, postgreSqlDbScenario, kafkaScenario)
+                .RegisterScenarios(eventStoreDbScenario, mongoDbScenario, postgreSqlDbScenario)
                 .WithWorkerPlugins(new HttpMetricsPlugin(new[] { HttpVersion.Version1 }))
                 .Run();
         }
