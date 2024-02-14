@@ -1,6 +1,8 @@
 using DatabaseComparison.DataAccess;
 using DatabaseComparison.ProjectionsImplementation;
 using Marten;
+using Marten.Events.Daemon.Resiliency;
+using Marten.Events.Projections;
 using NEventStore;
 using NEventStore.Serialization;
 using Weasel.Core;
@@ -28,6 +30,8 @@ builder.Services.AddMarten(options =>
 {
     // Establish the connection string to your Marten database
     options.Connection(builder.Configuration.GetConnectionString("PostgreSql")!);
+    
+    options.Projections.Add(new MartenEventProjection(), ProjectionLifecycle.Async);
 
     // If we're running in development mode, let Marten just take care
     // of all necessary schema building and patching behind the scenes
@@ -35,7 +39,9 @@ builder.Services.AddMarten(options =>
     {
         options.AutoCreateSchemaObjects = AutoCreate.All;
     }
-});
+})
+.UseLightweightSessions()
+.AddAsyncDaemon(DaemonMode.Solo);;
 
 builder.Services.AddHostedService(serviceProvider => new SubscribingHostedService(serviceProvider));
 
