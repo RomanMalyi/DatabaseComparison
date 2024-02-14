@@ -35,11 +35,11 @@ namespace DatabaseComparison.Controllers
 
             try
             {
-                await session.Events.AppendExclusive(streamId, @event);//first time use StartStream
+                await session.Events.AppendExclusive(streamId, @event);
                 await session.SaveChangesAsync();
             }
             catch (Exception e)
-            {
+            {//first time use StartStream
                 session.Events.StartStream(streamId, @event);
                 await session.SaveChangesAsync();
             }

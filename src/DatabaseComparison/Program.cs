@@ -1,5 +1,5 @@
-using DatabaseComparison.Controllers;
 using DatabaseComparison.DataAccess;
+using DatabaseComparison.ProjectionsImplementation;
 using Marten;
 using NEventStore;
 using NEventStore.Serialization;
@@ -36,6 +36,8 @@ builder.Services.AddMarten(options =>
         options.AutoCreateSchemaObjects = AutoCreate.All;
     }
 });
+
+builder.Services.AddHostedService(serviceProvider => new SubscribingHostedService(serviceProvider));
 
 var app = builder.Build();
 
