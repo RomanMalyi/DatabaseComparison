@@ -25,6 +25,9 @@ public class SubscribingHostedService : BackgroundService
                     Console.WriteLine($"Received event {evnt.OriginalEventNumber}@{evnt.OriginalStreamId}");
                     //await HandleEvent(evnt);
                 }, cancellationToken: stoppingToken);
+
+            var mongoChangeStream = new MongoDbChangeStream();
+            await mongoChangeStream.WatchCollectionAsync(stoppingToken);
         }
     }
 }
