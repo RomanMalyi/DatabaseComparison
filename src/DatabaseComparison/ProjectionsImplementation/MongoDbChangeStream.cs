@@ -1,5 +1,9 @@
+using DatabaseComparison.Domain.Events;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 
 namespace DatabaseComparison.ProjectionsImplementation;
 
@@ -29,15 +33,34 @@ public class MongoDbChangeStream
             pipeline, 
             options
         );
-
-        Console.WriteLine("Waiting for changes...");
+        
         while (enumerator.MoveNext())
         {
             IEnumerable<ChangeStreamDocument<BsonDocument>> changes = enumerator.Current;
             foreach(ChangeStreamDocument<BsonDocument> change in changes)
             {
-                Console.WriteLine(change);
+                Commit commit = BsonSerializer.Deserialize<Commit>(change.FullDocument);
+                var e = JsonConvert.DeserializeObject<CurrencyInfoAdded>(commit.Events[0].Payload.Body);;
+                MemoryCollection.AddMongoDbEvent(e);
             }  
         }
     }
-}
+
+    [BsonIgnoreExtraElements]
+    public class Commit
+    {
+        public int _id { get; set; }
+
+        public Event[] Events { get; set; }
+    }
+    [BsonIgnoreExtraElements]
+    public class Event
+    {
+        public Payload Payload { get; set; }
+    }
+    [BsonIgnoreExtraElements]
+    public class Payload
+    {
+        public string Body { get; set; }
+    }
+}    

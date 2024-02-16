@@ -31,6 +31,7 @@ namespace DatabaseComparison.Controllers
                 Low = command.Low,
                 Open = command.Open,
                 Close = command.Close,
+                ApiCallTime = DateTime.Now
             };
 
             try

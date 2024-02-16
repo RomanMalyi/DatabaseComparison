@@ -1,4 +1,6 @@
+using DatabaseComparison.Domain.Events;
 using EventStore.Client;
+using Newtonsoft.Json;
 
 namespace DatabaseComparison.ProjectionsImplementation;
 
@@ -22,12 +24,22 @@ public class SubscribingHostedService : BackgroundService
             await client.SubscribeToAllAsync(
                 FromAll.Start,
                 async (subscription, evnt, cancellationToken) => {
-                    Console.WriteLine($"Received event {evnt.OriginalEventNumber}@{evnt.OriginalStreamId}");
-                    //await HandleEvent(evnt);
+                    MemoryCollection.AddEventStoreDbEvent(DeserializeFromMemory(evnt.OriginalEvent.Data));
                 }, cancellationToken: stoppingToken);
 
             var mongoChangeStream = new MongoDbChangeStream();
             await mongoChangeStream.WatchCollectionAsync(stoppingToken);
         }
+    }
+    
+    public static CurrencyInfoAdded DeserializeFromMemory(ReadOnlyMemory<byte> data)
+    {
+        // Convert ReadOnlyMemory<byte> to a string
+        string json = System.Text.Encoding.UTF8.GetString(data.Span);
+
+        // Deserialize the JSON string to CurrencyInfoAdded object
+        CurrencyInfoAdded result = JsonConvert.DeserializeObject<CurrencyInfoAdded>(json);
+
+        return result;
     }
 }

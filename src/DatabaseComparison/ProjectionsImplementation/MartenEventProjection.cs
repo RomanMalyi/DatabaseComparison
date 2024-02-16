@@ -1,4 +1,3 @@
-using DatabaseComparison.Domain;
 using DatabaseComparison.Domain.Events;
 using Marten;
 using Marten.Events.Projections;
@@ -9,6 +8,6 @@ public class MartenEventProjection : EventProjection
 {
     public async Task Project(CurrencyInfoAdded e, IDocumentOperations ops)
     {
-        Console.WriteLine($"Received event high:{e.High}, volume:{e.RealVolume}");
+        MemoryCollection.AddPostgreSqlEvent(e);
     }
 }

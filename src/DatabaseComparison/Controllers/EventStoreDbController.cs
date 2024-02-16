@@ -29,6 +29,7 @@ namespace DatabaseComparison.Controllers
                 Low = command.Low,
                 Open = command.Open,
                 Close = command.Close,
+                ApiCallTime = DateTime.Now
             };
             await userEventStore.AppendToStream(@event, streamName);
 
