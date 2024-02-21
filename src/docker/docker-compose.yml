@@ -4,6 +4,14 @@ services:
   eventstoredb:
     platform: linux/amd64
     image: eventstore/eventstore:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '1.50'
+          memory: 6000M
+        reservations:
+          cpus: '1'
+          memory: 2000M
     environment:
       - EVENTSTORE_INSECURE=true # let eventstore run without ceritficate
       - EVENTSTORE_EXT_TCP_PORT=1113 # set internal tcp port
